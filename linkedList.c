@@ -13,18 +13,20 @@ typedef struct{
     node* tail;
 } llist;
 
-node* newNode(int);
-llist* newLlist(void);
+node* newNode(int);//return a new node
+llist* newLlist(void);//return a new empty list
 
 void append(llist*, int);//insert at the end
 void push(llist*, int);//insert at beginning
 void insert(llist*, int, int);//insert anywhere
 void delete(llist*, int);//search the value and delete
+void clear(llist*);//delete all nodes
 node* pop(llist*, int);//go to position, delete and return the deleted node
 int search(llist, int);//search value and return position
 node* find(llist*, int);//search value and return node
 node* getNode(llist*, int);//return node in given position
-void printLlist(llist);
+void printLlist(llist);//print all nodes in list
+void printN(node*);//print the node content and the content of next node
 
 
 
@@ -39,20 +41,15 @@ int main(void){
 
     llist* list = newLlist();
 
-    for (int i = 0; i < 20; ++i){
-        int x = rand()%10;
-        if (x % 2 == 0){
-            insert(list, i-3, x);
-        } else if (x % 7 == 0){
-            push(list, x);
-        } else {
-            append(list, x);
-        }
+    for (int i = 0; i < 7; ++i){
+        int x = i;//rand()%10;
+        append(list, x);
     }
 
     printLlist(*list);
-    delete(list, 4);
-    printf("to delete: %d\n", 4);
+
+    printN(pop(list, 3));
+
     printLlist(*list);
     
     return 0;
@@ -135,14 +132,27 @@ void insert(llist* list, int position, int value){
 }
 
 void printLlist(llist list){
-    printf("size: %d\n", list.size);
     printf("NULL -> ");
     for (int i = 0; i < list.size; ++i){
-        if (i % 5 == 0) printf("\n");
+        if (i % 5 == 0 && i) printf("\n");
         printf("%d(%d) -> ", list.head->value, i);
         list.head = list.head->next;
     }
     printf("NULL\n");
+}
+
+void printN(node* myNode){
+    if (myNode) {
+        printf("node: %d\nnext: ", myNode->value);
+        if (!myNode->next){
+            printf("NULL\n");
+        } else {
+            printf("%d\n", myNode->next->value);
+        }
+        return;
+    }
+    printf("node: NULL\n");
+
 }
 
 int search(llist list, int value){
@@ -184,24 +194,53 @@ node* getNode(llist* list, int position){
 }
 
 void delete(llist* list, int value){
-    node* current;
-    if (!(list->head)) return;
-    if (list->head->value == value){
-        current = list->head;
+    if (!list->head) return;
+    node* current = list->head;
+    if (value == list->head->value) {
+        --list->size;
         list->head = list->head->next;
         free(current);
         return;
     }
-    return;
+    while (current->next && current->next->value != value){
+        current = current->next;
+    }
+
+    if (current == list->tail) return;
+    node* toDelete = current->next;
+    current->next = current->next->next;
+    --list->size;
+}
+
+void clear(llist* list){
+    node* current;
+    for (int i = 0; i < list->size; ++i){
+        current = list->head;
+        list->head = list->head->next;
+        free(current);
+    }
+    list->size = 0;
 }
 
 node* pop(llist* list, int position){
-    node* current = list->head;
+    if (!list->head) return NULL;
+    node* target;
     if (position <= 0){
-        return list->head;
+        target = list->head;
+        list->head = list->head->next;
+        --list->size;
+        return target;
     }
-    for (int i = 0; i < list->size - 1; ++i){
-        if (i == position) return current;
+    if (position >= list->size - 1){
+        target = getNode(list, -2);
+        node* toReturn = target->next;
+        target->next = target->next;
+        --list->size;
+        return toReturn;
     }
-    return NULL;
+    target = getNode(list, position - 1);
+    node* toReturn = target->next;
+    target->next = target->next->next;
+    --list->size;
+    return toReturn;
 }
