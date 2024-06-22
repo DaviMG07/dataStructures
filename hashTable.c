@@ -10,7 +10,7 @@ typedef struct{
 typedef struct{
     cell* arr;
     int buckets;
-    int growthRate;
+    float growthRate;
     int size;
 } table;
 
@@ -21,19 +21,32 @@ table* insert(table*, int);
 void printC(cell);
 void printH(table);
 
+
+
+
+
+
+
 int main(void){
     srand(time(NULL));
     system("cls||clear");
 
     table* tbl = newTable(4);
-    insert(tbl, 10);
-    insert(tbl, 11);
-    insert(tbl, 12);
-    printH(*tbl);
+    for (int i = 0; i < 12; ++i){
+        printf("\n");
+        tbl = insert(tbl, i*i);
+        printH(*tbl);
+    }
 
     printf("\n");
     return 0;
 }
+
+
+
+
+
+
 
 table* newTable(int size){
     table* new = malloc(sizeof(table));;
@@ -58,16 +71,18 @@ table* insert(table* table, int key){
     table->arr[index].status = 1;
     ++table->buckets;
     table->growthRate = (float)table->buckets / (float)table->size;
-    if (table->growthRate > 0.75) return reHash(table);
+    if (table->growthRate >= 0.75) return reHash(table);
     return table;
 }
 
 table* reHash(table* myTable){
-    table* new = malloc(sizeof(table));
-    new->size = myTable->size * 2;
-    new->arr = malloc(sizeof(cell) * new->size);
-    new->buckets = myTable->buckets;
-    new->growthRate = (float)new->buckets / (float)new->size;
+    table* new = newTable(myTable->size * 3);
+
+    for (int i = 0; i < myTable->size; ++i){
+        if (myTable->arr[i].status == 1){
+            insert(new, myTable->arr[i].value);
+        }
+    }
 
     free(myTable->arr);
     myTable->arr = NULL;
@@ -82,6 +97,7 @@ void printC(cell cell){
 }
 
 void printH(table myTable){
+    printf("size: %d\nbuckets: %d\ngrowth rate: %f\n", myTable.size, myTable.buckets, myTable.growthRate);
     printf("[");
     for (int i = 0; i < myTable.size; ++i){
         printC(myTable.arr[i]);
