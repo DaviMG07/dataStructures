@@ -1,80 +1,115 @@
+
 #include <iostream>
 
-int max(int a, int b){
-    return (a > b) ? a : b;
+template<typename anyType, typename anotherType>
+auto max(anyType x, anotherType y){
+    return (x > y) ? x : y;
 }
 
 class Node{
     public:
         int value;
-        int height = 1;
-        Node* parent = nullptr;
-        Node* left = nullptr;
-        Node* right = nullptr;
+        int height;
+        Node* left;
+        Node* right;
+    
+    Node* leftRotation(Node* root){
+        if (!root || !root->right) return nullptr;
+        Node* son = root->right;
 
-    int getHeight(Node* node){
-        return node ? node->height : 0;
-    }
+        root->right = son->left;
+        son->left = root;
 
-    int getHeight(){
-        return max(getHeight(this->left), getHeight(this->right)) + 1;
-    }
-
-    int getBF(Node* node){
-        return node ? node->right->getHeight() - node->left->getHeight() : 0;
-    }
-    int getBF(){
-        return getBF(this);
-    }
-
-    Node* leftRotation(Node* node){
-        if (!node || !node->right) return node;
-        Node* son = node->right;
-
-        node->right = son->left;
-        son->left = node;
-
-        son->height = son->getHeight();
-        node->height = node->getHeight();
+        root->getHeight();
+        son->getHeight();
 
         return son;
     }
     Node* leftRotation(){
         return leftRotation(this);
     }
+    Node* rightRotation(Node* root){
+        if (!root || !root->left) return nullptr;
+        Node* son = root->left;
+        root->left = son->right;
+        son->right = root;
 
-    Node* rightRotation(Node* node){
-        if (!node || !node->left) return node;
-        Node* son = node->left;
-
-        node->left = son->right;
-        son->right = node;
-
-        son->height = son->getHeight();
-        node->height = node->getHeight();
+        root->getHeight();
+        son->getHeight();
 
         return son;
     }
     Node* rightRotation(){
         return rightRotation(this);
     }
+
+    int getHeight(Node* root){
+        return root ? root->height : 0;
+    }
+    int getHeight(){
+        this->height = max(getHeight(this->left), getHeight(this->right)) + 1;
+        return this->height;
+    }
+
+    void print(){
+        printf("%d(%d)", this->value, this->height);
+    }
+
+    int getBalance(){
+        return (getHeight(this->right) - getHeight(this->left));
+    }
+
+    Node* balance(Node* root){
+        if (!root) return nullptr;
+        int bfactor = root->getBalance();
+
+        if (bfactor > 1 && root->right->getBalance() >= 0){
+            return leftRotation(root);
+        }
+        if (bfactor > 1 && root->right->getBalance() < 0){
+            root->right = rightRotation(root->right);
+            return leftRotation(root);
+        }
+        if (bfactor < -1 && root->left->getBalance() <= 0){
+            return rightRotation(root);
+        }
+        if (bfactor < -1 && root->left->getBalance() > 0){
+            root->left = leftRotation(root->left);
+            return rightRotation(root);
+        }
+        root->getHeight();
+        return root;
+    }
+    Node* balance(){
+        return balance(this);
+    }
+
+    Node* getMin(){
+        Node* current = this;
+        while (current->left){
+            current = current->left;
+        }
+        return current;
+    }
 };
 
-Node* newNode(Node* root, int value){
+Node* newNode(int value){
     Node* New = new Node;
     New->value = value;
-    New->parent = root;
+    New->height = 1;
+    New->left = New->right = nullptr;
     return New;
 }
 
 class Tree{
     public:
-      Node* root = nullptr;
-      int size = 0;
-      int height = 0;
+        Node* root = nullptr;
+        Node* right = nullptr;
+        Node* left = nullptr;
+
 
     Node* insert(Node* parent, int value){
-        Node* New = newNode(parent, value);
+        Node* New = newNode(value);
         if (!parent){
             return New;
         }
@@ -84,59 +119,92 @@ class Tree{
         else if (value > parent->value){
             parent->right = insert(parent->right, value);
         }
-        ++parent->height;
+        parent->getHeight();
         return parent;
     }
     void insert(int value){
         this->root = insert(this->root, value);
-        ++this->size;
-        this->height = this->root->height;
+        this->right = this->root->right;
+        this->left = this->root->left;
+        this->balance();
     }
 
     void inOrder(Node* parent){
         if (parent){
             inOrder(parent->left);
-            std::cout << parent->value << " ";
+            parent->print();
+            std::cout << " ";
             inOrder(parent->right);
         }
     }
     void inOrder(){
         inOrder(this->root);
+        std::cout << "\n";
     }
 
-    Node* balance(Node* parent){
-        if (!parent) return parent;
-        int balancingFactor = parent->getBF();
-        if (balancingFactor > 1 && parent->right->getBF() >= 0){
-            return parent->leftRotation();
+    void preOrder(Node* parent){
+        if (parent){
+            parent->print();
+            std::cout << " ";
+            preOrder(parent->left);
+            preOrder(parent->right);
         }
-        if (balancingFactor > 1 && parent->right->getBF() < 0){
-            parent->right = parent->right->rightRotation();
-            return parent->leftRotation();
+    }
+    void preOrder(){
+        preOrder(this->root);
+        std::cout << "\n";
+    }
+
+    void posOrder(Node* parent){
+        if (parent){
+            posOrder(parent->left);
+            posOrder(parent->right);
+            parent->print();
+            std::cout << " ";
         }
-        if (balancingFactor < -1 && parent->right->getBF() <= 0){
-            return parent->rightRotation();
+    }
+    void posOrder(){
+        posOrder(this->root);
+        std::cout << "\n";
+    }
+
+    void balance(){
+        this->root = this->root->balance();
+    }
+
+    Node* remove(Node* parent, int value){
+        if (!parent) return nullptr;
+        if (parent->value < value){
+            return remove(parent->left, value);
         }
-        if (balancingFactor < -1 && parent->right->getBF() > 0){
-            parent->left = parent->left->leftRotation();
-            return parent->rightRotation();
+        if (parent->value > value){
+            return remove(parent->right, value);
+        }
+        if (parent->value == value){
+            Node* minimum = parent->right->getMin();
+            parent->value = minimum->value;
+            free(minimum);
         }
         return parent;
     }
-
+    void remove(int value){
+        this->root = remove(this->root, value);
+        this->balance();
+    }
 };
 
-
 int main(void){
+    srand(time(nullptr));
     system("cls||clear");
 
     Tree tree;
-    tree.insert(10);
-    for (int i = 0 + 7; i < 7 + 7; ++i){
-        tree.insert(i);
+    for (int i = 0; i < 100; ++i){
+        tree.insert(rand() % 10);
     }
-    tree.root->leftRotation();
+    tree.remove(10);
     tree.inOrder();
+    tree.posOrder();
+    tree.preOrder();
 
     std::cout << "\n";
     return 0;
