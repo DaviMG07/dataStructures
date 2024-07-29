@@ -1,0 +1,55 @@
+dijks(Graph, source):
+    // Initialize distances
+    for each vertex v in Graph:
+        distance[v] = infinity
+        previous[v] = undefined
+    distance[source] = 0
+
+    // Initialize priority queue
+    priorityQueue = new MinHeap()
+    priorityQueue.insert(source, distance[source])
+
+    while not priorityQueue.isEmpty():
+        // Get vertex with minimum distance
+        u = priorityQueue.extractMin()
+
+        // For each neighbor v of u
+        for each neighbor v of u:
+            alt = distance[u] + weight(u, v)
+            if alt < distance[v]:
+                distance[v] = alt
+                previous[v] = u
+                priorityQueue.insert(v, distance[v])
+
+    return distance, previous
+
+class Graph:
+    private:
+        set[any] vertices
+        map[path, weight] adj
+    public:
+        get_attribute(self):
+            return self.attributte
+        
+        dijkstra(self, src):
+            for v in graph:
+                distance[v] = INF
+                previous[v] = NULL
+            distance[src] = 0
+
+            priorityQueue pq
+            pq.insert(src, distance[src])
+
+            while pq:
+                u = pq.get_min()
+
+                for v in u:
+                    alternative = distance[u] + path(u, v).weight
+                    if alternative < distance[v]:
+                        distance[v] = alternative
+                        previous[v] = u
+                        pq.insert(v, distance[v])
+
+            return (distace, previous)
+
+
